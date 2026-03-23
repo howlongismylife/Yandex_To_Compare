@@ -2,7 +2,6 @@ package api
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -64,7 +63,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		return date.Format(dateFormat), nil
 
 	default:
-		return "", fmt.Errorf("unsupported repeat format")
+		return "", errors.New("unsupported repeat format")
 	}
 }
 
@@ -74,7 +73,7 @@ func nextDayHandler(w http.ResponseWriter, r *http.Request) {
 	repeat := r.FormValue("repeat")
 
 	if dateStr == "" {
-		http.Error(w, "date is required", http.StatusBadRequest)
+		writeJSON(w, map[string]any{"error": "date is required"})
 		return
 	}
 
@@ -84,16 +83,18 @@ func nextDayHandler(w http.ResponseWriter, r *http.Request) {
 	if nowStr != "" {
 		now, err = time.Parse(dateFormat, nowStr)
 		if err != nil {
-			http.Error(w, "invalid now", http.StatusBadRequest)
+			writeJSON(w, map[string]any{"error": "invalid now"})
 			return
 		}
 	}
 
 	next, err := NextDate(now, dateStr, repeat)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		writeJSON(w, map[string]any{"error": err.Error()})
 		return
 	}
 
-	w.Write([]byte(next))
+	writeJSON(w, map[string]string{
+		"date": next,
+	})
 }

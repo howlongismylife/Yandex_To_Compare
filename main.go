@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"final_project/pkg/api"
 	"final_project/pkg/db"
@@ -14,6 +15,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.DB.Close()
 
 	// регистрация API обработчиков
 	api.Init()
@@ -24,10 +26,16 @@ func main() {
 	// файловый сервер
 	http.Handle("/", http.FileServer(http.Dir(webDir)))
 
-	log.Println("Server started on port: 7540")
+	// порт (исправление замечания ревьюера)
+	port := os.Getenv("TODO_PORT")
+	if port == "" {
+		port = "7540"
+	}
+
+	log.Println("Server started on port:", port)
 
 	// запуск сервера
-	err = http.ListenAndServe(":7540", nil)
+	err = http.ListenAndServe(":"+port, nil)
 	if err != nil {
 		log.Fatal(err)
 	}

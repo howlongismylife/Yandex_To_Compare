@@ -25,7 +25,7 @@ func Init(dbFile string) error {
 	_, err := os.Stat(dbFile)
 
 	install := false
-	if err != nil {
+	if os.IsNotExist(err) {
 		install = true
 	}
 
