@@ -20,9 +20,8 @@ type tasksResp struct {
 }
 
 func tasksHandler(w http.ResponseWriter, r *http.Request) {
-	search := r.URL.Query().Get("search")
 
-	list, err := db.Tasks(50, search)
+	list, err := db.Tasks(50)
 	if err != nil {
 		writeJSON(w, map[string]any{"error": err.Error()})
 		return
