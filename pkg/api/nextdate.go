@@ -68,9 +68,9 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 }
 
 func nextDayHandler(w http.ResponseWriter, r *http.Request) {
-	nowStr := r.FormValue("now")
-	dateStr := r.FormValue("date")
-	repeat := r.FormValue("repeat")
+	nowStr := r.URL.Query().Get("now")
+	dateStr := r.URL.Query().Get("date")
+	repeat := r.URL.Query().Get("repeat")
 
 	if dateStr == "" {
 		writeJSON(w, map[string]any{"error": "date is required"})
@@ -94,7 +94,6 @@ func nextDayHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, map[string]string{
-		"date": next,
-	})
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	_, _ = w.Write([]byte(next))
 }
