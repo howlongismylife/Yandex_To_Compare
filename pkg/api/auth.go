@@ -4,14 +4,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"net/http"
-	"os"
 )
 
-func auth(next http.HandlerFunc) http.HandlerFunc {
+func auth(pass string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		pass := os.Getenv("TODO_PASSWORD")
-
 		// если пароль не задан — пропускаем всё
 		if pass == "" {
 			next(w, r)
@@ -20,7 +16,9 @@ func auth(next http.HandlerFunc) http.HandlerFunc {
 
 		cookie, err := r.Cookie("token")
 		if err != nil {
-			http.Error(w, "Authentification required", http.StatusUnauthorized)
+			writeJSON(w, http.StatusUnauthorized, map[string]any{
+				"error": "authentication required",
+			})
 			return
 		}
 
@@ -28,7 +26,9 @@ func auth(next http.HandlerFunc) http.HandlerFunc {
 		validToken := hex.EncodeToString(hash[:])
 
 		if cookie.Value != validToken {
-			http.Error(w, "Authentification required", http.StatusUnauthorized)
+			writeJSON(w, http.StatusUnauthorized, map[string]any{
+				"error": "authentication required",
+			})
 			return
 		}
 

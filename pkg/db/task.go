@@ -54,6 +54,7 @@ func Tasks(limit int) ([]*Task, error) {
 
 	return tasks, rows.Err()
 }
+
 func GetTask(id string) (*Task, error) {
 	var task Task
 
@@ -65,7 +66,7 @@ func GetTask(id string) (*Task, error) {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("Задача не найдена")
+			return nil, fmt.Errorf("task not found")
 		}
 		return nil, err
 	}
@@ -89,7 +90,7 @@ func UpdateTask(task *Task) error {
 	}
 
 	if count == 0 {
-		return fmt.Errorf("Задача не найдена")
+		return fmt.Errorf("task not found")
 	}
 
 	return nil
@@ -110,7 +111,7 @@ func UpdateDate(next string, id string) error {
 	}
 
 	if count == 0 {
-		return fmt.Errorf("Задача не найдена")
+		return fmt.Errorf("task not found")
 	}
 
 	return nil
@@ -131,7 +132,7 @@ func DeleteTask(id string) error {
 	}
 
 	if count == 0 {
-		return fmt.Errorf("Задача не найдена")
+		return fmt.Errorf("task not found")
 	}
 
 	return nil

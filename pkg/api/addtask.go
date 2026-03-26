@@ -21,7 +21,9 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		deleteTaskHandler(w, r)
 	default:
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]any{
+			"error": "method not allowed",
+		})
 	}
 }
 
@@ -29,33 +31,32 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 	var task db.Task
 
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
-		writeJSON(w, map[string]any{"error": err.Error()})
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
 		return
 	}
 
 	if strings.TrimSpace(task.Title) == "" {
-		writeJSON(w, map[string]any{"error": "Не указан заголовок задачи"})
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "Не указан заголовок задачи"})
 		return
 	}
 
 	if err := checkDate(&task); err != nil {
-		writeJSON(w, map[string]any{"error": err.Error()})
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
 		return
 	}
 
 	id, err := db.AddTask(&task)
 	if err != nil {
-		writeJSON(w, map[string]any{"error": err.Error()})
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 		return
 	}
 
-	writeJSON(w, map[string]any{"id": strconv.FormatInt(id, 10)})
+	writeJSON(w, http.StatusCreated, map[string]any{"id": strconv.FormatInt(id, 10)})
 }
 
 func checkDate(task *db.Task) error {
 	now := time.Now()
 
-	// обнуляем время у now
 	now = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 
 	if task.Date == "" {
@@ -73,7 +74,6 @@ func checkDate(task *db.Task) error {
 			return err
 		}
 
-		// переносим только если дата строго меньше сегодня
 		if t.Before(now) {
 			task.Date = next
 		}
@@ -86,25 +86,31 @@ func checkDate(task *db.Task) error {
 	return nil
 }
 
-func writeJSON(w http.ResponseWriter, data any) {
+func writeJSON(w http.ResponseWriter, statusCode int, data any) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(statusCode)
+
+	if data == nil {
+		return
+	}
+
 	_ = json.NewEncoder(w).Encode(data)
 }
 
 func getTaskHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.FormValue("id")
 	if id == "" {
-		writeJSON(w, map[string]any{"error": "Не указан идентификатор"})
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "Не указан идентификатор"})
 		return
 	}
 
 	task, err := db.GetTask(id)
 	if err != nil {
-		writeJSON(w, map[string]any{"error": err.Error()})
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 		return
 	}
 
-	writeJSON(w, map[string]any{
+	writeJSON(w, http.StatusOK, map[string]any{
 		"id":      strconv.FormatInt(task.ID, 10),
 		"date":    task.Date,
 		"title":   task.Title,
@@ -123,23 +129,23 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, map[string]any{"error": err.Error()})
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
 		return
 	}
 
 	if req.ID == "" {
-		writeJSON(w, map[string]any{"error": "Не указан идентификатор"})
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "Не указан идентификатор"})
 		return
 	}
 
 	id, err := strconv.ParseInt(req.ID, 10, 64)
 	if err != nil {
-		writeJSON(w, map[string]any{"error": "Некорректный идентификатор"})
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "Некорректный идентификатор"})
 		return
 	}
 
 	if strings.TrimSpace(req.Title) == "" {
-		writeJSON(w, map[string]any{"error": "Не указан заголовок задачи"})
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "Не указан заголовок задачи"})
 		return
 	}
 
@@ -152,14 +158,14 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := checkDate(&task); err != nil {
-		writeJSON(w, map[string]any{"error": err.Error()})
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
 		return
 	}
 
 	if err := db.UpdateTask(&task); err != nil {
-		writeJSON(w, map[string]any{"error": err.Error()})
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 		return
 	}
 
-	writeJSON(w, map[string]any{})
+	writeJSON(w, http.StatusOK, map[string]any{})
 }

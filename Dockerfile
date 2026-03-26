@@ -6,6 +6,4 @@ COPY . .
 
 RUN go build -o app .
 
-EXPOSE 7540
-
 CMD ["./app"]

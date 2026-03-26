@@ -7,6 +7,8 @@ import (
 	"final_project/pkg/db"
 )
 
+const tasksLimit = 50
+
 type taskResp struct {
 	ID      string `json:"id"`
 	Date    string `json:"date"`
@@ -20,10 +22,11 @@ type tasksResp struct {
 }
 
 func tasksHandler(w http.ResponseWriter, r *http.Request) {
-
-	list, err := db.Tasks(50)
+	list, err := db.Tasks(tasksLimit)
 	if err != nil {
-		writeJSON(w, map[string]any{"error": err.Error()})
+		writeJSON(w, http.StatusInternalServerError, map[string]any{
+			"error": err.Error(),
+		})
 		return
 	}
 
@@ -41,5 +44,5 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	writeJSON(w, resp)
+	writeJSON(w, http.StatusOK, resp)
 }

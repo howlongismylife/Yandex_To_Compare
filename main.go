@@ -17,8 +17,11 @@ func main() {
 	}
 	defer db.DB.Close()
 
+	// пароль для API
+	pass := os.Getenv("TODO_PASSWORD")
+
 	// регистрация API обработчиков
-	api.Init()
+	api.Init(pass)
 
 	// директория с фронтендом
 	webDir := "./web"
@@ -26,7 +29,7 @@ func main() {
 	// файловый сервер
 	http.Handle("/", http.FileServer(http.Dir(webDir)))
 
-	// порт (исправление замечания ревьюера)
+	// порт
 	port := os.Getenv("TODO_PORT")
 	if port == "" {
 		port = "7540"

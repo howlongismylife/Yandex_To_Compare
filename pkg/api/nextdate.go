@@ -28,7 +28,6 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 	rule := parts[0]
 
 	switch rule {
-
 	case "d":
 		if len(parts) != 2 {
 			return "", errors.New("invalid repeat format")
@@ -73,7 +72,7 @@ func nextDayHandler(w http.ResponseWriter, r *http.Request) {
 	repeat := r.URL.Query().Get("repeat")
 
 	if dateStr == "" {
-		writeJSON(w, map[string]any{"error": "date is required"})
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "date is required"})
 		return
 	}
 
@@ -83,14 +82,14 @@ func nextDayHandler(w http.ResponseWriter, r *http.Request) {
 	if nowStr != "" {
 		now, err = time.Parse(dateFormat, nowStr)
 		if err != nil {
-			writeJSON(w, map[string]any{"error": "invalid now"})
+			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid now"})
 			return
 		}
 	}
 
 	next, err := NextDate(now, dateStr, repeat)
 	if err != nil {
-		writeJSON(w, map[string]any{"error": err.Error()})
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
 		return
 	}
 
